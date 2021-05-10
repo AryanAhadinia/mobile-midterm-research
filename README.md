@@ -16,8 +16,24 @@ Parse Android SDK
 
 ## Parse Android SDK چیست؟
 
+## ساختار نوشته 
+
 ## مزایای استفاده از Parse Server و SDK های آن چیست؟ 
 
 ## چگونه Parse Android SDK را به پروژه خود اضافه کنیم؟ 
+
+## Object در Parse
+
+## Query در Parse
+
+## کاربر در Parse 
+
+## Role در Parse
+
+## Session در Parse
+
+## File در Parse
+
+## Local Datastore در Parse
 
 </div>
