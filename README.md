@@ -128,6 +128,90 @@ public class App extends Application {
 ## Session در Parse
 
 ## File در Parse
+ParseFile به کاربر اجازه میدهد که در سرور فایل ذخیره یا از آن فایل دریافت کند.
+توجه کنید که محتویات یک فایل را میتوانیم با یک ParseObject بفرستیم اما بسیار سنگین میشود و عملکرد خوبی نخواهد داشت.
+
+ساخت ParseFile بسیار ساده است.
+توجه کنید که هر فایل در سیستم، معادل یک رشته از byte است.
+بنابرین میتوانیم هر فایلی در سیستم را به یک رشته بایت تبدیل کنیم.
+متد سازنده ParseFile نیز اسم فایل و رشته از بایت های سازنده آن فایل را دریافت میکند.
+
+<div dir="ltr">
+
+```java
+byte[] data = "This is a new file's contents".getBytes();
+ParseFile file = new ParseFile("resume.txt", data);
+```
+</div>
+
+توجه کنید که در مورد فایل ها دو نکته شایان ذکر است.
+
+- نگرانی بابت تعارض اسم فایل ها با یک دیگر وجود ندارد.
+  میتوان چند فایل با یک نام آپلود کرد.
+  این موضوع توسط Parse با یک unique identifier که به هر فایل تعلق میگیرد، مدیریت میشود.
+  
+- اطمینان حاصل کنید که نام فایل دارای پسوند مناسب است تا Parse بتواند رفتار مناسب را با فایل انجام دهد.
+
+مشابه قبل برای ذخیره یک فایل، متودهایی وجود دارد. (پیشتر در بخش ابجکت ها توضیح دادیم.) با توجه به نیاز میتوان از هر یک از متودهای `save` استفاده کرد.
+
+<div dir="ltr">
+
+```java
+file.saveInBackground();
+```
+</div>
+
+پس از آنکه عملیات ذخیره تکمیل شود، میتوان با فایل مانند مشابه یک object عادی برخورد کرد و حتی آن را درون ParseObject قرار داد.
+
+<div dir="ltr">
+
+```java
+ParseObject jobApplication = new ParseObject("JobApplication");
+jobApplication.put("applicantName", "Joe Smith");
+jobApplication.put("applicantResumeFile", file);
+jobApplication.saveInBackground();
+```
+</div>
+
+همچنین مشابه قبل، میتوان با Query، فایل ها را دریافت کنیم.
+به عنوان مثال فایل ذخیره شده در کد فوق را میتوانیم به شکل زیر دریافت کنیم.
+
+<div dir="ltr">
+
+```java
+ParseFile applicantResume = (ParseFile) anotherApplication.get("applicantResumeFile");
+applicantResume.getDataInBackground(new GetDataCallback() {
+    public void done(byte[] data, ParseException e) {
+        if (e == null) {
+            // data has the bytes for the resume
+        } else {
+            // something went wrong
+        }
+    }
+});
+```
+</div>
+
+یکی از مزایای Parse این است که موضوع پیچیده ای مانند Progress در آن پیاده‌سازی شده است.
+به سادگی در هر دو متود `saveInBackground` و `getDataInBackground` میتوانیم با پیاده‌سازی کلاس `ProccessCallback`، میتوانیم از وضعیت پیشرفت فرآیند آگاه شویم و با این آگاهی می توانیم مواردی مانند spinner و یا ... را بروزرسانی کنیم.
+
+<div dir="ltr">
+
+```java
+byte[] data = "Working at Parse is great!".getBytes();
+ParseFile file = new ParseFile("resume.txt", data);
+
+file.saveInBackground(new SaveCallback() {
+    public void done(ParseException e) {
+        // Handle success or failure here ...
+    }
+}, new ProgressCallback() {
+    public void done(Integer percentDone) {
+        // Update your progress spinner here. percentDone will be between 0 and 100.
+    }
+});
+```
+</div>
 
 ## Local Datastore در Parse
 
