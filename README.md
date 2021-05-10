@@ -37,6 +37,15 @@ Parse Android SDK
 به مستندات Parse Android SDK دسترسی پیدا کنید.
 
 ## مزایای استفاده از Parse Server و SDK های آن چیست؟ 
+در Parse Platform، یعنی Parse Server و SDK های آن، بسیاری از مباحث پیچیده مانند مسائل امنیتی، Caching، ارسال پیام از Server به کلاینت و ... در نظر گرفته شده است.
+استفاده از این پلتفرم میتواند برنامه نویس را از پیاده‌سازی این موارد رها کند.
+در مقایسه با رقبا، Parse Server از طرف شرکت بزرگی مانند Facebook حمایت میشود.
+همچنین Parse Platform، متن-باز و به سادگی میتوان از طریق مخازن این پروژه در
+<a href="https://github.com/parse-community">
+GitHub
+</a>
+به Source Code پارس سرور و SDK ها دسترسی پیدا کنید.
+همچنین Parse Platform دارای Community نسبتا قوی است که برای چنین پروژه ای مزیت مهمی محسوب میشود.
 
 ## چگونه Parse Android SDK را به پروژه خود اضافه کنیم؟ 
 
