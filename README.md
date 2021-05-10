@@ -24,6 +24,17 @@ Parse Android SDK
 در این نوشته، تمرکز ما بر روی Parse Android SDK و چگونگی به کار گرفتن آن در پروژه های اندرویدی است.
 
 ## ساختار نوشته 
+در این نوشته سعی می کنیم به ساختار Documentation اصلی Parse Android SDK وفادار بمانیم تا ادامه مطلب در Document اصلی برای مخاطب امکان‌پذیر باشد.
+تلاش بر این است که افراد بتوانند با خواندن این نوشته، Parse Android SDK را درک و در بتوانند در پروژه های خود استفاده اولیه ای از آن داشته باشند.
+میتوانید از طریق
+<a href="https://docs.parseplatform.org/parse-server/guide/">
+این لینک
+</a>
+به مستندات Parse Server و از طریق
+<a href="https://docs.parseplatform.org/android/guide/#relations">
+این لینک
+</a>
+به مستندات Parse Android SDK دسترسی پیدا کنید.
 
 ## مزایای استفاده از Parse Server و SDK های آن چیست؟ 
 
