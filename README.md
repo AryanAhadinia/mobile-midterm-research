@@ -83,8 +83,8 @@ dependencies {
 <div dir="ltr">
 
 ```xml
- <application
-   android:name=".App">
+ <application 
+        android:name=".App">
    ...
  </application>
 ```
@@ -100,17 +100,17 @@ dependencies {
 import com.parse.Parse;
 import android.app.Application;
 
-public class App extends Application {
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    Parse.initialize(new Parse.Configuration.Builder(this)
-      .applicationId("YOUR_APP_ID")
-      .clientKey("YOUR_CLIENT_KEY")
-      .server("http://localhost:1337/parse/")
-      .build()
-    );
-  }
+public class App extends Application { 
+    @Override 
+    public void onCreate() { 
+        super.onCreate();
+        Parse.initialize(new Parse.Configuration.Builder(this)
+                .applicationId("YOUR_APP_ID")
+                .clientKey("YOUR_CLIENT_KEY")
+                .server("http://localhost:1337/parse/")
+                .build()
+        ); 
+    }
 }
 ```
 </div>
