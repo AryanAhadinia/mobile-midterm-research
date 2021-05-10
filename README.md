@@ -47,7 +47,74 @@ GitHub
 به Source Code پارس سرور و SDK ها دسترسی پیدا کنید.
 همچنین Parse Platform دارای Community نسبتا قوی است که برای چنین پروژه ای مزیت مهمی محسوب میشود.
 
-## چگونه Parse Android SDK را به پروژه خود اضافه کنیم؟ 
+## چگونه Parse Android SDK را به پروژه خود اضافه کنیم؟
+
+###مرحله اول 
+ابتدا اطمینان حاصل کنید که در مخزن jitpack در build.gradle پروژه (و نه ماژول) قرار دارد.
+
+<div dir="ltr">
+
+```
+allprojects {
+	repositories {
+		...
+		maven { url "https://jitpack.io" }
+	}
+}
+```
+</div>
+
+### مرحله دوم 
+وابستگی (dependency) مربوط به parse android sdk را به build.gradle ماژول اضافه کنید.
+
+<div dir="ltr">
+
+```
+dependencies {
+    implementation "com.github.parse-community.Parse-SDK-Android:parse:latest.version.here"
+}
+```
+</div>
+
+### مرحله سوم 
+کلاس Application را در `AndroidManifest.xml` پروژه تعریف کنید.
+
+<div dir="ltr">
+
+```xml
+ <application
+   android:name=".App">
+   ...
+ </application>
+```
+</div>
+
+### مرحله چهارم 
+کلاس Application را پیاده‌سازی کنید و آن تابع `onCreate` را پیاده‌سازی کنید و در آن، در آن Parse را با استفاده از Context برنامه initialize کنید.
+منظور از initialize کردن، مشخص کردن آدرس سرور هدف (Target Server) و مشخص کردن مقادیر لازم برای احراز هویت Application به Server است.
+
+<div dir="ltr">
+
+```java
+import com.parse.Parse;
+import android.app.Application;
+
+public class App extends Application {
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    Parse.initialize(new Parse.Configuration.Builder(this)
+      .applicationId("YOUR_APP_ID")
+      .clientKey("YOUR_CLIENT_KEY")
+      .server("http://localhost:1337/parse/")
+      .build()
+    );
+  }
+}
+```
+</div>
+
+اکنون Application در شروع برنامه، Parse را initial می کند و در ادامه در هر کجای برنامه میتوانید از طریق متود های static کلاس Parse، ارتباطات لازم را برقرار کنید.
 
 ## Object در Parse
 
