@@ -588,6 +588,171 @@ ParseUser.getCurrentUser().saveInBackground();
 ```
 </div>
 
+###مشخص کردن کاربر کنونی
+
+اگر شیوه هویت سنجی خودتان را استفاده میکنید یا میخواهید از طرف سرور وارد یک حساب کاربری شوید، میتوانید session token را به client ارسال کنید و از متد become استفاده کنید.
+این متد قبل از تعیین کردن کاربر کنونی، اطمینان حاصل میکند که token معتبر است.
+
+<div dir="ltr">
+
+```java
+ParseUser.becomeInBackground("session-token-here", new LogInCallback() {
+    public void done(ParseUser user, ParseException e) {
+        if (user != null) {
+            // The current user is now set to user.
+        } else {
+            // The token could not be validated.
+        }
+    }
+});
+```
+</div>
+
+###امنیت برای آبجکت های user
+کلاس ParseUser به صورت پیش فرض ایمن است.
+داده ذخیره شده در یک ParseUser صرفا توسط همان کاربر قابل تغییر است.
+به صورت پیش فرض، داده میتواند توسط هر کلاینتی خوانده شود.
+از این روی، برخی آبجکت های ParseUser تصدیق میشوند و میتوان آنها را اصلاح کرد، درحالی که برخی دیگر صرفا قابل خواندن هستند.
+
+به طور ویژه، شما قادر نیستید که هیچ یک از انواع متد های save یا delete را فراخوانی کنید، مگر اینکه ParseUser را با یکی از روش های اعتبارسنجی به دست آورده باشید، همچون logIn یا signUp.
+این روش اطمینان حاصل میکند که تنها خود کاربر میتواند اطلاعاتش را تغییر دهد.
+
+کد زیر این سیاست امنیتی را نشان میدهد:
+
+<div dir="ltr">
+
+```java
+ParseUser user = ParseUser.logIn("my_username", "my_password");
+user.setUsername("my_new_username"); // attempt to change username
+user.saveInBackground();// This succeeds, since the user 
+// was authenticated on the device
+
+// Get the user from a non-authenticated manner
+ParseQuery<ParseUser> query = ParseUser.getQuery();
+query.getInBackground(user.getObjectId(), new GetCallback<ParseUser>() {
+    public void done(ParseUser object, ParseException e) {
+        object.setUsername("another_username");
+
+        // This will throw an exception, since the ParseUser is not authenticated
+        object.saveInBackground();
+    }
+});
+```
+</div>
+
+ParseUser ای که از ()getCurrentUser گرفته میشود همیشه اعتبارسنجی شده است.
+
+اگر نیاز دارید که چک کنید آیا یک ParseUser اعتبارسنجی شده است یا خیر، میتوانید از متد ()isAuthenticated استفاده کنید.
+نیازی نیست که آبجکت های ParseUser ای که از طریق یک روش اعتبارسنجی بدست آمده اند را با این متد بررسی کنید.
+
+###امنیت برای سایر object ها
+همان مدلی که برای ParseUser ها اعمال میشد میتواند برای سایر object ها نیز اعمال شود.
+برای هر object ای میتوانید مشخص کنید که کدام کاربران اجازه دارند که آن را بخوانند و کدام کاربران مجازند که آن را اصلاح کنند.
+برای پشتیبانی از این نوع امنیت، هر آبجکت یک
+[لیست مدیریت دسترسی](https://en.wikipedia.org/wiki/Access_control_list)
+دارد، که با ParseACL پیاده سازی شده است.
+
+ساده ترین راه برای استفاده از یک ParseACL مشخص کردن این است که یک object میتواند تنها توسط یک کاربر خوانده یا نوشته شود.
+برای ساختن چنین objectی، ابتدا باید یک ParseUser وارد شده باشد.
+سپس، new ParseACL(user) یک ParseACL میسازد که دسترسی به آن کاربر را محدود میکند.
+لیست مدیریت دسترسی (ACL) یک object وقتی که آن object ذخیره شود به روز رسانی میشود.
+از این روی، برای ساختن یک یادداشت خصوصی که تنها توسط کاربر کنونی قابل دسترسی باشد چنین میکنیم:
+
+<div dir="ltr">
+
+```java
+ParseObject privateNote = new ParseObject("Note");
+privateNote.put("content", "This note is private!");
+privateNote.setACL(new ParseACL(ParseUser.getCurrentUser()));
+privateNote.saveInBackground();
+```
+</div>
+
+این یادداشت تنها برای کاربر کنونی در دسترس خواهد بود، همچنین روی تمام دستگاه هایی که این کاربر در آنها وارد حسابش شده است نیز قابل دسترسی است.
+این قابلیت برای برنامه هایی که میخواهند قابلیت دسترسی به اطلاعات کاربر را در بین چند دستگاه داشته باشند مفید است، مثل برنامه یادداشت شخصی.
+
+مجوز ها را میتوانید طی یک روال برای هر کاربر بدهید.
+میتوانید اجازه ها را تک به تک به یک ParseACL با استفاده از setReadAccess و setWriteAccess بدهید.
+برای مثال فرض کنید که یک پیغام دارید که به یک گروه با اعضای متعدد فرستاده خواهد شد و تمام اعضا حق خواندن و پاک کردن آن را دارند:
+
+<div dir="ltr">
+
+```java
+ParseObject groupMessage = new ParseObject("Message");
+ParseACL groupACL = new ParseACL();
+
+// userList is an Iterable<ParseUser> with the users we are sending this message to.
+for (ParseUser user : userList) {
+    groupACL.setReadAccess(user, true);
+    groupACL.setWriteAccess(user, true);
+}
+
+groupMessage.setACL(groupACL);
+groupMessage.saveInBackground();
+```
+</div>
+
+همچنین میتوانید با setPublicReadAccess و setPublicWriteAccess به همه کاربر ها به صورت یکجا اجازه دهید.
+این اجازه میدهد الگوهایی مانند ارسال کامنت را برای پیام ها ایجاد کنید.
+برای مثال، جهت ایجاد یک پست که تنها میتواند توسط نویسنده اش اصلاح شود، اما همه میتوانند آن را بخوانند داریم:
+
+<div dir="ltr">
+
+```java
+ParseObject publicPost = new ParseObject("Post");
+ParseACL postACL = new ParseACL(ParseUser.getCurrentUser());
+postACL.setPublicReadAccess(true);
+publicPost.setACL(postACL);
+publicPost.saveInBackground();
+```
+</div>
+
+برای کمک به این که مطمئن باشید داده ی کاربرانتان به صورت پیش فرض ایمن است، میتوانید یک ACL پیش فرض را به تمام ParseObject های جدید اعمال کنید:
+
+<div dir="ltr">
+
+```java
+ParseACL.setDefaultACL(defaultACL, true);
+```
+</div>
+
+در کد بالا پارامتر دوم تابع به Parse اطلاع میدهد که مطمئن شود که ACL پیش فرض که هنگام ساخته شدن object محول شده است در آن زمان به کاربر کنونی اجازه خواندن و نوشتن میدهد.
+بدون این تنظیمات، شما نیاز دارید که ACL پیش فرض را هر دفعه که یک کاربر وارد یا خارج میشود reset کنید تا کاربر کنونی دسترسی های مناسب داشته باشد.
+با این تنظیمات، شما میتوانید از تغییرات روی کاربر کنونی چشم پوشی کنید تا وقتی که به طور صریح نیاز داشته باشید که دسترسی های متفاوتی اعطا کنید.
+
+ACL های پیش فرض ساختن برنامه هایی که روال های دسترسی معمول دارند را ساده میکند.
+به عنوان مثال برنامه ای چون Twitter، که محتوای کاربر به طور عمومی برای جهان قابل مشاهده است، میتواند یک default ACL را به این صورت تنظیم کند:
+
+<div dir="ltr">
+
+```java
+ParseACL defaultACL = new ParseACL();
+defaultACL.setPublicReadAccess(true);
+ParseACL.setDefaultACL(defaultACL, true);
+```
+</div>
+
+برای برنامه ای مثل DropBox، که داده ی کاربر تنها برای خودش قابل دسترسی است مگر این که به صراحت اجازه داده شده باشد، شما میتوانید از یک default ACL استفاده کنید که تنها به کاربر کنونی دسترسی دهد:
+
+<div dir="ltr">
+
+```java
+ParseACL.setDefaultACL(new ParseACL(), true);
+```
+</div>
+
+برنامه ای که در Parse، داده را Log میکند ولی به هیچ کاربری اجازه دسترسی به آن داده را نمیدهد میتواند با ارائه ی یک ACL منع کننده، دسترسی کاربر کنونی را منع کند:
+
+<div dir="ltr">
+
+```java
+ParseACL.setDefaultACL(new ParseACL(), false);
+```
+</div>
+
+عملیات هایی که ممنوع هستند، همچون پاک کردن object ی که اجازه نوشتن روی آن را ندارید، منجر به دریافت خطای ParseException.OBJECT_NOT_FOUND میشوند.
+برای اهداف امنیتی، این مانع میشود که کاربران تشخیص دهند که کدام object id ها وجود دارند اما ایمن شده اند، و کدام ها اصلا وجود ندارند.
+
 ## Role در Parse
 
 ## Session در Parse
