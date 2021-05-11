@@ -947,4 +947,35 @@ query.getInBackground("xWMyZ4YE", new GetCallback<ParseObject>() {
 ```
 </div>
 
+### Querying the Local Datastore
+
+اکثرا شما می‌خواهید که یک لیست از اشیایی را بیابید که با یک معیار به‌خصوص تطابق دارند، به جای اینکه تنها یک شی را با کمک ID بگیرید. برای انجام این کار، شما می‌توانید که از یک 
+<a href="https://docs.parseplatform.org/android/guide/#queries">
+ParseQuery	
+</a>
+ استفاده کنید. هر `ParseQuery` می‌تواند همراه Datastore محلی همانگونه استفاده شود که همراه با شبکه استفاده می‌شود. نتایج شامل هر شیئی است که شما پین کرده‌اید و با query تطابق دارد.همهٔ تغییرات ذخیره‌نشده‌ای که شما در شی ایجاد کرده‌اید، هنگام ارزیابی query در نظر گرفته خواهد شد. پس شما می‌توانید که یک شیء محلی که تطبیق دارد را بیابید، حتی اگر آن هیچ‌گاه از طرف سرور برای این query به‌خصوص return نشده باشد.
+ 
+<div dir="ltr">
+
+```java
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+query.whereEqualTo("playerName", "Joe Bob");
+query.fromLocalDatastore();
+// If data is protected by Role based ACLs:
+query.ignoreAcls();
+query.findInBackground(new FindCallback<ParseObject>() {
+    public void done(List<ParseObject> scoreList,
+                     ParseException e) {
+        if (e == null) {
+            Log.d("score", "Retrieved " + scoreList.size());
+        } else {
+            Log.d("score", "Error: " + e.getMessage());
+        }
+    }
+});
+```
+</div>
+
+### از پین برداشتن
+
 </div>
