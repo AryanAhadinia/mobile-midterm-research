@@ -908,4 +908,43 @@ ParseObject.pinAllInBackground(listOfObjects);
 ```
 </div>
 
+### بازیابی کردن
+
+ذخیره کردن اشیا عالیست اما تنها هنگامی مفید است که شما بتوانید اشیا را بعدا بازیابی کنید. برای بازیابی یک شی از Datastore محلی، تابع `fromLocalDatastore` را صدا بزنید تا به `ParseQuery` بگوید که کجا را برای نتایج آن نگاه کند.
+
+<div dir="ltr">
+
+```java
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+query.fromLocalDatastore();
+```
+</div>
+
+تنها تفاوت این است که شما قادر نخواهید بود که به اطلاعاتی که توسط لیست‌های کنترل‌کننده دسترسی بر پایه نقش مراقبت می‌شود، دسترسی پیدا کنید، به علت اینکه نقش‌ها روی سرور ذخیره شده‌اند. برای دسترسی به این اطلاعات، شما ممکن است نیاز داشته باشید که از لیست‌های کنترل‌کننده دسترسی صرف نظر کنید. برای این کار کافی است که هنگام اجرای یک Local datastore query با صدا کردن تابع `ignoreAcls` روی query این کار را انجام دهید. توجه کنید که بعد از صدا کردن این تابع، شما نمی‌توانید که از همان query برای لود کردن از شبکه استفاده کنید.
+
+<div dir="ltr">
+
+```java
+// If data is protected by Role based ACLs:
+query.ignoreAcls();
+```
+</div>
+
+سپس شما می‌توانید که اشیا را طبق معمول بازیابی کنید.
+
+<div dir="ltr">
+
+```java
+query.getInBackground("xWMyZ4YE", new GetCallback<ParseObject>() {
+    public void done(ParseObject object, ParseException e) {
+        if (e == null) {
+            // object will be your game score
+        } else {
+            // something went wrong
+        }
+    }
+});
+```
+</div>
+
 </div>
