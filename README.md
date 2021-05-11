@@ -118,6 +118,186 @@ public class App extends Application {
 اکنون Application در شروع برنامه، Parse را initial می کند و در ادامه در هر کجای برنامه میتوانید از طریق متود های static کلاس Parse، ارتباطات لازم را برقرار کنید.
 
 ## Object در Parse
+برای ذخیره‌سازی اطلاعات در بستر Parse باید از ParseObject استفاده کنیم.
+هر ParseObject، جفت هایی از Key-Value ها را شامل میشود.
+توجه کنید که این Key-Value ها باید سازگار با JSON باشند.
+بنابرین Key ها تنها میتوانند String باشند.
+اما Value ها مقداری متفاوتی میتوانند داشته باشند مانند عدد، رشته، مقدار منطقی و حتی آبجکت و یا آرایه.
+به شرط اینکه از شرایط JSON تبعیت کنند. مثلا آبجکت دوری نباشد.
+هر ParseObject شامل یک ClassName نیز میشود تا Object ها به صورت دسته ای از هم تمییز یابند.
+
+طبق استاندازد های جاوا و پارس، بهتر است که اسامی کلاس ها از استاندارد UpperCamelCase و کلید ها از استاندارد lowerCamelCase پیروی کنند.
+
+به شکل زیر میتوانیم یک ParseObject بسازیم.
+
+<div dir="ltr">
+
+```java
+ParseObject gameScore = new ParseObject("GameScore");
+```
+</div>
+
+و همچنین میتوانیم مقادیری دلخواهی را به عنوان argument به شکل زیر به آن نسبت بدهیم.
+
+<div dir="ltr">
+
+```java
+gameScore.put("score", 1337);
+gameScore.put("playerName", "Sean Plott");
+gameScore.put("cheatMode", false);
+```
+</div>
+
+در نهایت با صدا کردن تابع `saveInBackground` میتوانیم آن را به سرور ارسال و در سرور ذخیره کنیم.
+
+<div dir="ltr">
+
+```java
+gameScore.saveInBackground();
+```
+</div>
+
+در نهایت در سرور، ابجکتی مشابه شکل زیر ذخیره خواهد شد.
+
+<div dir="ltr">
+
+```java
+objectId: "xWMyZ4YEGZ",
+score: 1337,
+playerName: "Sean Plott",
+cheatMode: false,
+createdAt:"2011-06-10T18:33:42Z",
+updatedAt:"2011-06-10T18:33:42Z"
+```
+</div>
+
+همان گونه که Object را در سرور ذخیره کردیم، با داشتن objectId یک ابجکت و دانستن اینکه متغیر مورد نظر از کدام کلاس است، میتوانیم آن متغیر را از سرور دریافت کنیم.
+
+<div dir="ltr">
+
+```java
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+query.getInBackground("xWMyZ4YEGZ", new GetCallback<ParseObject>() {
+    public void done(ParseObject object, ParseException e) {
+        if (e == null) {
+            // object will be your game score
+        } else {
+            // something went wrong
+        }
+    }
+});
+```
+</div>
+
+همچنین به سادگی میتوانیم، Value یک Key مورد نظر را در type دلخواه دریافت کنیم.
+
+<div dir="ltr">
+
+```java
+int score = gameScore.getInt("score");
+String playerName = gameScore.getString("playerName");
+boolean cheatMode = gameScore.getBoolean("cheatMode");
+```
+</div>
+
+جدا از Key-Value ها، 4 getter برای Field های ویژه تعریف شده اند.
+
+<div dir="ltr">
+
+```java
+String objectId = gameScore.getObjectId();
+Date updatedAt = gameScore.getUpdatedAt();
+Date createdAt = gameScore.getCreatedAt();
+ParseACL acl = gameScore.getACL();
+```
+</div>
+
+توجه کنید که ممکن لازم شود ک object را بروزرسانی کنیم تا بروزترین اطلاعات در سرور را به دست آوریم.
+به جای آنکه دوباره آن آبجکت را با کوئری مورد نظر از سرور دریافت کنیم، میتوانیم به سادگی از متد `fetchInBackground` استفاده کنیم و آن را روی آبجکت مورد نظر صدا کنیم.
+
+<div dir="ltr">
+
+```java
+myObject.fetchInBackground(new GetCallback<ParseObject>() {
+    public void done(ParseObject object, ParseException e) {
+        if (e == null) {
+            // Success!
+        } else {
+            // Failure!
+        }
+    }
+});
+```
+</div>
+
+توجه کنید که علی الرعم معماری انطباق پذیر با آسنکرون بودن تابع و استفاده از Callback، کد درون Callback روی ترد صدا کننده اجرا میشود.
+
+در این SDK، یک local datastore تعبیه شده است که در آن اطلاعات روی خود دستگاه ذخیره می شود.
+با ذخیره داده روی local datastore، چیزی به سرور ارسال نمیشود اما این datastore به طور ویژه برای ذخیره موقتی اطلاعاتی که بعدا به سرور ارسال خواهند شد مفید است.
+
+اگر بخواهیم از این local datastore استفاده کنیم، باید که در زمان initialize کردن پارس، آن را فعال کنیم. به این صورت که پیش از صدا کردن تابع
+`initialize`
+در کلاس Application، تابع
+`enableLocalDatastore`
+را صدا بزنیم.
+
+به سادگی و مشابه آنچه پیشتر دیدیم، میتوانیم ParseObject را روی Local Datastore ذخیره کنیم یا از Object های ذخیره شده روی آن، Query بگیریم.
+
+<div dir="ltr">
+
+```java
+ParseObject gameScore = new ParseObject("GameScore");
+gameScore.put("score", 1337);
+gameScore.put("playerName", "Sean Plott");
+gameScore.put("cheatMode", false);
+gameScore.pinInBackground();
+```
+</div>
+
+<div dir="ltr">
+
+```java
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+query.fromLocalDatastore();
+query.getInBackground("xWMyZ4YEGZ", new GetCallback<ParseObject>() {
+    public void done(ParseObject object, ParseException e) {
+        if (e == null) {
+            // object will be your game score
+        } else {
+            // something went wrong
+        }
+    }
+});
+```
+</div>
+
+به همین سادگی نیز میتوانیم ابجکت ها را از local datastore حذف کنیم.
+
+<div dir="ltr">
+
+```java
+gameScore.unpinInBackground();
+```
+</div>
+
+یکی از مزایای Parse، مدیریت کردن شرایط بدون اینترنت است.
+ممکن است در مواقعی، بخواهیم که یک object در اولین فرصت که شرایط انترنت مهیا شد، در سرور ذخیره شود.
+در این شرایط میتوانیم از تابع `saveEventually` استفاده کنیم.
+این تابع در اولین زمانی که اینترنت مهیا شود، ابجکت مورد نظر را به سرور ارسال میکند.
+در این زمان اگر Application باز و بسته شود نیز اشکالی بوجود نمی آید.
+اگر local datastore را در برنامه استفاده کنیم، object در زمانی که در انتظار برقراری اتصال اینترنت برای ارسال به سرور است، در local datastore ذخیره میشود.
+توجه کنید که مشابه تابغ `saveEventually`، تابع `deleteEventually` نیز وجود دارد.
+
+<div dir="ltr">
+
+```java
+ParseObject gameScore = new ParseObject("GameScore");
+gameScore.put("score", 1337);
+gameScore.put("playerName", "Sean Plott");
+gameScore.put("cheatMode", false);
+gameScore.saveEventually();
+```
+</div>
 
 ## Query در Parse
 
