@@ -361,22 +361,257 @@ increment("key", "amount");
 </div>
 
 ### آرایه ها 
+به سادگی می توانیم یک کلید را آرایه فرض کنیم و از توابع SDK برای کار با آرابه بهره بگیریم.
 
+<div dir="ltr">
 
-### حذف یک کلید از Object 
+```java
+add("key", object);
+addAll("key", list);
+addUnique("key", object);
+addUniqueAll("key", list);
+removeAll("key", object); // remove all instance of object given in array.
+```
+</div>
 
+به عنوان مثال داریم:
+
+<div dir="ltr">
+
+```java
+gameScore.addAllUnique("skills", Arrays.asList("flying", "kungfu"));
+gameScore.saveInBackground();
+```
+</div>
+
+### حذف یک کلید از Object
+با استفاده از تابع remove، میتوانیم کلید مورد نظر را از سرور حذف کنیم. مثال:
+
+<div dir="ltr">
+
+```java
+myObject.remove("playerName");
+myObject.saveInBackground(); // Saves the field deletion to your Parse Server
+```
+</div>
+
+مشابه آنچه پیشتر در بروزرسانی دیدیم، parse به صورت خودکار کشف میکند که کدام کلید حذف شده و همان را به سرور ارسال میکند.
+نیازی به نگرانی در مورد سربار شبکه وجود ندارد.
 
 ### حذف ابجکت از سرور 
 
+به سادگی میتوانیم دستور حذف یک ابجکت را برای سرور به شکل زیر ارسال کنیم.
+
+<div dir="ltr">
+
+```java
+myObject.deleteInBackground();
+```
+</div>
 
 ### Data Types
+توجه کنید که به عنوان مقادیر مجاز یک کلید در ParseObject، میتوانیم از Type های زیر استفاده کنیم.
+مقابل هر type، تبدیل آن را برای سریالیزه شدن نوشته ایم.
 
+<div dir="ltr">
+
+String => String <br/>
+Number => primitive numeric values such as ints, doubles, longs, or floats <br/>
+Bool => boolean <br/>
+Array => JSONArray <br/>
+Object => JSONObject <br/>
+Date => java.util.Date <br/>
+File => ParseFile <br/>
+Pointer => other ParseObject <br/>
+Relation => ParseRelation <br/>
+Null => JSONObject.NULL <br/>
+</div>
+
+میتوانیم با استفاده از JSONObject و JSONArray، داده های پیچیده تری را درون یک ParseObject ذخیره کنیم.
 
 ### ارث بری از ParseObject 
+می توانیم، هنگام تعریف کلاس ها، از کلاس ParseObject ارث بری کنیم.
+در این صورت، نیازی نیست که هر بار یک ParseObject از روی object مورد نظر بسازیم و بر روی آن متودهایی مانند `saveInBackground` و یا موارد مشابه را call کنیم.
 
+به مثال زیر توجه کنید.
+در حالت سنتی که پیش از این بیان کردیم، اینگونه عمل میکردیم.
+
+<div dir="ltr">
+
+```java
+ParseObject shield = new ParseObject("Armor");
+shield.put("displayName", "Wooden Shield");
+shield.put("fireproof", false);
+shield.put("rupees", 50);
+shied.saveInBackground();
+```
+</div>
+
+در روش جدید، کلاس Armor را از ParseObject، گسترش میدهیم، (extend میکنیم) و به این صورت عمل می کنیم.
+
+<div dir="ltr">
+
+```java
+Armor shield = new Armor();
+shield.setDisplayName("Wooden Shield");
+shield.setFireproof(false);
+shield.setRupees(50);
+shied.saveInBackground();
+```
+</div>
+
+مزیت این روش این است که مدل و ParseObject با یکدیگر ادغام میشوند و حجم کد کاهش می یابد.
+
+برای اینکه یک زیرکلاس از ParseObject درست کنیم، مراحل زیر را باید طی کنیم.
+
+- از کلاس ParseObject، یک کلاس extend کنیم.
+
+- با استفاده از Annotation، نام کلاس ParseObject را، که پیش از این در کانستراکتور ParseObject وارد میکردیم، مشخص کنیم.
+
+- اطمینان حاصل کنید که کلاس مورد نظر یک constructor با صفر پارامتر ورودی دارد. این کانستراکتور میتواند Default Constructor باشد، هیچ یک از Field های parse object را نباید در آن تغییر دهیم.
+  نبود پارامتر در کانستراکتور را می توانیم با مقداردهی value ها با setter جبران کنیم.
+  یا میتوانیم از الگوهایی مانند Builder استفاده کنیم.
+  
+- در نهایت باید در کلاس Application پیش از initialize کردن Parse، با استفاده از متود registerSubclass، کلاس مورد نظر را به عنوان یک زیرکلاس از ParseObject به Parse بشناسانیم.
+
+یک مثال ساده از فرایند فوق را می توانید مشاهده کنید.
+
+<div dir="ltr">
+
+```java
+import com.parse.ParseObject;
+import com.parse.ParseClassName;
+
+@ParseClassName("Armor") 
+public class Armor extends ParseObject {
+}
+```
+</div>
+
+<div dir="ltr">
+
+```java
+import com.parse.Parse;
+import android.app.Application;
+
+public class App extends Application { 
+    @Override 
+    public void onCreate() { 
+        super.onCreate();
+        
+        ParseObject.registerSubclass(Armor.class);
+        Parse.initialize(this);
+    }
+}
+```
+</div>
+
+توجه کنید که تعریف کردن Field در ParseObject بی معنی است.
+همچنان باید با استفاده از همان داده ساختار Key-Value کار ها را انجام دهیم.
+اما به سادگی می توانیم getter و setter تعریف کنیم.
+
+<div dir="ltr">
+
+```java
+@ParseClassName("Armor")
+public class Armor extends ParseObject { 
+    public String getDisplayName() { 
+        return getString("displayName"); 
+    }
+    
+    public void setDisplayName(String value) { 
+        put("displayName", value); 
+    }
+}
+```
+</div>
+
+اکنون که getter و setter داریم، میتوانی رفتار مشابه field با آنها داشته باشیم.
+
+همچنین با استفاده از متود getQuery نیز میتوانیم از query مورد نظر را از زیرکلاس تعریف شده از سرور دریافت کینم.
+
+<div dir="ltr">
+
+```java
+ParseQuery<Armor> query = ParseQuery.getQuery(Armor.class);
+query.whereLessThanOrEqualTo("rupees", ParseUser.getCurrentUser().get("rupees"));
+query.findInBackground(new FindCallback<Armor>() {
+    @Override
+    public void done(List<Armor> results, ParseException e) {
+        for (Armor a : results) {
+            // ...
+        }
+    }
+});
+```
+</div>
 
 ### Object های مرتبط
 
+توجه کنید که ممکن است دو object به یک دیگر مرتبط باشند. به این صورت که یکی از آنها لینکی به دیگری داشته باشد. به این حالت relation میگوییم.
+
+به عنوان مثال، در یک وبلاگ، کامنت ها مربوط به یک Post مشخص هستند.
+
+بنابرین می توانیم مشابه مثال زیر، یک آبجکت را در یک آبجکت دیگر قرار دهیم.
+
+<div dir="ltr">
+
+```java
+// Create the post
+ParseObject myPost = new ParseObject("Post");
+myPost.put("title", "I'm Hungry");
+myPost.put("content", "Where should we go for lunch?");
+
+// Create the comment
+ParseObject myComment = new ParseObject("Comment");
+myComment.put("content", "Let's do Sushirrito.");
+
+// Add a relation between the Post and Comment
+myComment.put("post", myPost);
+
+// This will save both myPost and myComment
+myComment.saveInBackground();
+```
+</div>
+
+در نهایت با سیو کردن کامنت در دیتابیس، پست نیز در دیتابیس ذخیره میشود.
+
+ممکن است که ابجکت را در حافظه نداشته باشیم.
+در این صورت میتوانیم با استفاده از objectId نیز به شکل زیر ارتباط را برقرار کنیم.
+
+<div dir="ltr">
+
+```java
+// Add a relation between the Post with objectId "1zEcyElZ80" and the comment
+myComment.put("post", ParseObject.createWithoutData("Post", "1zEcyElZ80"));
+```
+</div>
+
+مثال بالا را در نظر بگیرید، به صورت کلی با دریافت کامنت از سرور، پست مربوط به آن دریافت نمیشود مگر اینکه از تابع `fetchIfNeededInBackground` استفاده کنیم.
+الگوی استفاده از این تابع به شکل زیر است.
+
+<div dir="ltr">
+
+```java
+fetchedComment.getParseObject("post").fetchIfNeededInBackground(new GetCallback<ParseObject>() {
+    public void done(ParseObject post, ParseException e) {
+        String title = post.getString("title");
+        // Do something with your new title variable
+        // }
+});
+```
+</div>
+
+در این حالت به دلیل استفاده ای که از post میکنیم، parse به صورت خودکار post را از سرور دریافت خواهد کرد.
+
+برای حذف ارتباط، کافی است که کلید سازنده ارتباط را در key-value های object حذف کنیم.
+
+<div dir="ltr">
+
+```java
+comment.remove(post);
+```
+</div>
 
 ## Query در Parse
 
@@ -386,7 +621,7 @@ increment("key", "amount");
 
 با این کلاس، شما میتوانید عملکرد حساب کاربری را به برنامه‌تان اضافه کنید.
 
-ParseUser زیرکلاسی از ParseObject است و همان ویژگی ها را دارد، همچون الگوی انعطاف پذیر، دوام خودکار، و یک واسط key value.
+ParseUser زیرکلاسی از ParseObject است و همان ویژگی ها را دارد، همچون الگوی انعطاف‌پذیر، دوام خودکار، و یک واسط key value.
 تمام متد هایی که در ParseObject هستند در ParseUser نیز وجود دارند.
 تفاوتشان در این است که ParseUser چند ویژگی اضافه دارد که مخصوص حساب کاربری است.
 
