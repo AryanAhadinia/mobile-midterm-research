@@ -1030,17 +1030,17 @@ ParseObject.unpinAllInBackground("MyScores");
 <div dir="ltr">
 
 ```java
-ParseQuery<ParseObject> query = ParseQuery.getQuery(“GameScore");
-query.orderByDescending(“score”);
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+query.orderByDescending("score");
 
 // Query for new results from the network.
 query.findInBackground(new FindCallback<ParseObject>() {
   public void done(final List<ParseObject> scores, ParseException e) {
     // Remove the previously cached results.
-    ParseObject.unpinAllInBackground(“highScores”, new DeleteCallback() {
+    ParseObject.unpinAllInBackground("highScores", new DeleteCallback() {
     public void done(ParseException e) {
       // Cache the new results.
-      ParseObject.pinAllInBackground(“highScores”, scores);
+      ParseObject.pinAllInBackground("highScores", scores);
     }
   });
   }
@@ -1053,8 +1053,8 @@ query.findInBackground(new FindCallback<ParseObject>() {
 <div dir="ltr">
 
 ```java
-ParseQuery<ParseObject> query = ParseQuery.getQuery(“GameScore");
-query.orderByDescending(“score”);
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+query.orderByDescending("score");
 query.fromLocalDatastore();
 
 query.findInBackground(new FindCallback<ParseObject>() {
