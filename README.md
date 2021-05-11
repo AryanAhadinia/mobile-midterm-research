@@ -128,6 +128,7 @@ public class App extends Application {
 
 طبق استاندازد های جاوا و پارس، بهتر است که اسامی کلاس ها از استاندارد UpperCamelCase و کلید ها از استاندارد lowerCamelCase پیروی کنند.
 
+### ذخیره object ها 
 به شکل زیر میتوانیم یک ParseObject بسازیم.
 
 <div dir="ltr">
@@ -171,6 +172,7 @@ updatedAt:"2011-06-10T18:33:42Z"
 ```
 </div>
 
+### دریافت object ها 
 همان گونه که Object را در سرور ذخیره کردیم، با داشتن objectId یک ابجکت و دانستن اینکه متغیر مورد نظر از کدام کلاس است، میتوانیم آن متغیر را از سرور دریافت کنیم.
 
 <div dir="ltr">
@@ -212,6 +214,7 @@ ParseACL acl = gameScore.getACL();
 ```
 </div>
 
+### بروز رسانی object ها 
 توجه کنید که ممکن لازم شود ک object را بروزرسانی کنیم تا بروزترین اطلاعات در سرور را به دست آوریم.
 به جای آنکه دوباره آن آبجکت را با کوئری مورد نظر از سرور دریافت کنیم، میتوانیم به سادگی از متد `fetchInBackground` استفاده کنیم و آن را روی آبجکت مورد نظر صدا کنیم.
 
@@ -232,6 +235,7 @@ myObject.fetchInBackground(new GetCallback<ParseObject>() {
 
 توجه کنید که علی الرعم معماری انطباق پذیر با آسنکرون بودن تابع و استفاده از Callback، کد درون Callback روی ترد صدا کننده اجرا میشود.
 
+### استفاده از حافظه محلی 
 در این SDK، یک local datastore تعبیه شده است که در آن اطلاعات روی خود دستگاه ذخیره می شود.
 با ذخیره داده روی local datastore، چیزی به سرور ارسال نمیشود اما این datastore به طور ویژه برای ذخیره موقتی اطلاعاتی که بعدا به سرور ارسال خواهند شد مفید است.
 
@@ -280,6 +284,7 @@ gameScore.unpinInBackground();
 ```
 </div>
 
+### ذخیره کردن object ها در حالت offline 
 یکی از مزایای Parse، مدیریت کردن شرایط بدون اینترنت است.
 ممکن است در مواقعی، بخواهیم که یک object در اولین فرصت که شرایط انترنت مهیا شد، در سرور ذخیره شود.
 در این شرایط میتوانیم از تابع `saveEventually` استفاده کنیم.
@@ -298,6 +303,80 @@ gameScore.put("cheatMode", false);
 gameScore.saveEventually();
 ```
 </div>
+
+### تغییر object ها 
+ممکن است بخواهیم در ویژگی ها یک object تغییری ایجاد کنیم و آن را در سرور ارسال کنیم.
+این کار به سادگی انجام میشود.
+پس از دریافت object، میتوانیم key های مورد نظر را دوباره مقدار دهی کنیم.
+مقدار دهی مجدد موجب تغییر مقدار میشود.
+سپس ابجکت به دست آمده را مجددا ذخیره کنیم.
+
+<div dir="ltr">
+
+```java
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+
+// Retrieve the object by id
+query.getInBackground("xWMyZ4YEGZ", new GetCallback<ParseObject>() {
+    public void done(ParseObject gameScore, ParseException e) {
+        if (e == null) {
+            // Now let's update it with some new data. In this case, only cheatMode and score
+            // will get sent to your Parse Server. playerName hasn't changed.
+            gameScore.put("score", 1338);
+            gameScore.put("cheatMode", true);
+            gameScore.saveInBackground();
+        }
+    }
+});
+```
+</div>
+
+پارس به صورت خودکار، فیلدهایی را که دچار تغییر شده اند، شناسایی میکند و تنها آنها را از طریق شبکه ارسال میکند.
+بنابرین نیازی به نگرانی راجب به سربار شبکه نیست.
+
+### شمارنده ها در Parse 
+تصور کنید که دو کلاینت، همزمان میخواهند در سرور یک شمارنده را افزایش دهند.
+فرض کنید مقدار این متغیر در هر دو کلاینت 100، است.
+هر دو پس از یک واحد افزایش یه 101 میرسند.
+سپس با ارسال درخواست به سرور مقدار نهایی 101 خواهد شد.
+در Parse برای متغیر های عددی، متود increment تعبیه شده است.
+با فراخوانی آن برای یک کلید مشخص در یک object، مقدار آن به صورت تضمین شده یک واحد افزایش پیدا می کند.
+
+<div dir="ltr">
+
+```java
+gameScore.increment("score");
+gameScore.saveInBackground();
+```
+</div>
+
+همچنین می توانیم از فرم زیر استفاده کنیم تا increment را به مقدار دلخواه انجام دهیم.
+توجه کنید که میتوانیم با increment به مقدار منفی، decrement را پیاده‌سازی کنیم.
+
+<div dir="ltr">
+
+```java
+increment("key", "amount");
+```
+</div>
+
+### آرایه ها 
+
+
+### حذف یک کلید از Object 
+
+
+### حذف ابجکت از سرور 
+
+
+### Data Types
+
+
+### ارث بری از ParseObject 
+
+
+### Object های مرتبط
+
 
 ## Query در Parse
 
