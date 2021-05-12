@@ -1160,7 +1160,155 @@ query.findInBackground(new FindCallback<ParseObject>() {
 ```
 </div>
 
+### امنیت session 
+
+object های session تنها برای کاربری که session مربوط به آن است قابل دسترسی است.
+یعنی تمام session ها یک ACL دارند که تنها به کاربر مربوطه اجازه خواندن و نوشتن میدهد و اگر برای session ها query درخواست کنید، تنها session های مربوط به کاربری که در حال حاضر وارد شده است را دریافت میکنید.
+
+وقتی یک کاربر را با شیوه ی User login یا sign up یا twitter و facebook وارد میکنید، یک Parse به طور خودکار یک session محدود نشده در سرور میسازد.
+
+همچون سایر کلاس های Parse، شما میتوانید برای session ها نیز یک مجوز سطح-کلاس (CLP) تعریف کنید تا خواندن و نوشتن را از session API محدود کنید.
+البته این کار، خللی در امور خودکار سرور جهت ساختن و پاک کردن session ها هنگام ثبت نام و ورود و خروج ایجاد نمیکند.
+توصیه میشود که CLP هایی که نیازی به آنها ندارید را غیر فعال کنید.
+در اینجا چند مثال از کاربرد CLP ها آورده شده است:
+
+- Find, Delete:
+با کمک آن میتوان صفحه ای ساخت که کاربر در آن سایر session هایش را در دستگاه های دیگر مشاهده کرده و از آنها خارج شود.
+اگر برنامه شما چنین صفحه ای ندارد توصیه میشود این را غیر فعال کنید.
+
+- Create:
+این مورد برای برنامه هایی کاربرد دارد که کاربر بخواهد از دستگاهش یک session برای دستگاهی دیگر ایجاد کند.
+اگر برای موبایل یا وب برنامه مینویسید بهتر است این گزینه را غیرفعال کنید.
+استفاده اصلی این مورد برای برنامه های مربوط به اینترنت اشیا (IoT) است، در این شرایط هم اگر دستگاه دیگر واقعا نیازی به داده های کاربر ندارد بهتر است آن را غیر فعال کنید.
+
+- Get, Update, Add Field: 
+اگر به این گزینه ها نیازی ندارید آنها را غیر فعال کنید.
+
 ## Role در Parse
+
+با بزرگ شدن برنامه و زیاد شدن تعداد کاربران، ممکن است نیاز به افزودن دسترسی هایی بزرگ تر از ACL به کاربران داده شود، با استفاده از role میتوانید این کار را انجام دهید.
+Parse از  Role-based Access Control پشتیبانی میکند.
+role ها روشی منطقی برای اعطای دسترسی هستند، role آبجکتی است که شامل تعدادی user و role است، هر دسترسی که به role داده شود برای کاربران داخل آن و role هایی که در آن موجود هستند نیز داده میشود.
+
+به عنوان مثال در برنامه ای جهت انتشار محتوا، شما میتوانید کاربرانی به عنوان مدیر داشته باشید که محتوای کاربران عادی را اصلاح یا حذف کنند.
+همچنین میتوانید نقش ادمین را به تعدادی از کاربران بدهید که همان دسترسی های مدیر را داشته باشند اما بتوانند تنظیماتی را در برنامه نیز اعمال کنند.
+با اعطای این نقش ها به تعدادی از کاربران، میتوانید مطمئن باشید که تمام کاربران میتوانند به این نقش ها ارتقا داده شوند، بدون این که بخواهید به طور دستی این کار را انجام دهید.
+
+برای این کار کلاس ParseRole در کلاینت وجود دارد که فرزند کلاس ParseObject است.
+
+### خصوصیات ParseRole 
+
+- name: 
+این نام را تنها یکبار هنگام ساختن role میتوان آن را انتخاب کرد.
+  این نام باید از کاراکتر های الفبا، فاصله و خط فاصله تشکیل شده باشد.
+  هدف از داشتن نام این است که برای شناسایی نقش، به جای objectId از این فیلد استفاده شود.
+  
+- users: 
+یک relation به آن دسته از کاربران است که دسترسی های role را به ارث میبرند.
+  
+- rolse:
+یک relation به role هایی که کاربرانش دسترسی های این role را به ارث میبرند.
+  
+### امنیت برای object های role 
+
+امنیت برای ParseRole مشابه امینت سایر object هاست، با این تفاوت که ACL باید به طور صریح برای آن مشخص شود.
+به طور عمومی در برنامه ها Administrator ها و master user که دسترسی های زیادی دارند باید بتوانند role جدید بسازند یا آنها را تغییر دهند.
+مراقب باشید که اگر به یک کاربر اجازه نوشتن در یک ParseRole را داده باشید، میتواند به آن role کاربر جدید ایجاد کند یا آن را کاملا پاک کند.
+
+برای ساختن role جدید، میتوانید از این روش استفاده کنید:
+
+<div dir="ltr">
+
+```java
+// By specifying no write privileges for the ACL, we can ensure the role cannot be altered.
+ParseACL roleACL = new ParseACL();
+roleACL.setPublicReadAccess(true);
+ParseRole role = new ParseRole("Administrator", roleACL);
+role.saveInBackground();
+```
+</div>
+
+شما میتوانید role ها و کاربران را به role جدید اضافه کنید که دسترسی های آن را به ارث ببرند.
+برای این کار باید relation مربوط را بسازید:
+
+<div dir="ltr">
+
+```java
+ParseRole role = new ParseRole(roleName, roleACL);
+for (ParseUser user : usersToAddToRole) {
+  role.getUsers().add(user)
+}
+for (ParseRole childRole : rolesToAddToRole) {
+  role.getRoles().add(childRole);
+}
+role.saveInBackground();
+```
+</div>
+
+### امنیت بر پایه role برای سایر object ها 
+
+با ترکیب کردن role و ParseACL میتوانید برای هر object مشخص کنید که هر کاربر چه دسترسی هایی به object دارد.
+هر ParseObject یک ACL دارد که مشخص میکند کدام کاربران میتوانند آن را بخوانند و کدام ها میتوانند در آن بنویسند.
+
+برای دادن قابلیت خواندن یا نوشتن روی یک object برای یک role چند روش موجود است:
+
+<div dir="ltr">
+
+```java
+ParseRole moderators = /* Query for some ParseRole */;
+        ParseObject wallPost = new ParseObject("WallPost");
+        ParseACL postACL = new ParseACL();
+        postACL.setRoleWriteAccess(moderators);
+        wallPost.setACL(postACL);
+        wallPost.saveInBackground();
+```
+</div>
+
+اگر نخواهید query بزنید، میتوانید نام role را برای ACL مشخص کنید:
+
+<div dir="ltr">
+
+```java
+ParseObject wallPost = new ParseObject("WallPost");
+ParseACL postACL = new ParseACL();
+postACL.setRoleWriteAccess("Moderators", true);
+wallPost.setACL(postACL);
+wallPost.save();
+```
+</div>
+
+همچنین هنگام تعریف ACL پیش فرض، میتوانید از ACL بر پایه role استفاده کنید.
+با این کار ضمن حفاظت از اطلاعات کاربرانتان، میتوانید به کاربران با مقام بالاتر، دسترسی های لازم را بدهید.
+به عنوان مثال یک برنامه forum میتواند به این شکل عمل کند:
+
+<div dir="ltr">
+
+```java
+ParseACL defaultACL = new ParseACL();
+// Everybody can read objects created by this user
+defaultACL.setPublicReadAccess(true);
+// Moderators can also modify these objects
+defaultACL.setRoleWriteAccess("Moderators");
+// And the user can read and modify its own objects
+ParseACL.setDefaultACL(defaultACL, true);
+```
+</div>
+
+### سلسله مراتب role 
+
+همانطور که قبل تر گفته شد، اگر یک role را فرزند یک role دیگر قرار دهیم، تمام دسترسی هایی که role پدر در اختیار دارد، در اختیار role فرزند نیز خواهد بود.
+برای نمونه، فرض کنید در برنامه ای، نقش Moderator وجود دارد که پست های کاربران را مدیریت میکند.
+در این برنامه اگر بخواهیم نقش Administrator را اضافه کنیم که علاوه بر تنظیمات برنامه، بتواند پست های کاربران را همانند Moderator ها مدیریت کند خواهیم داشت:
+
+<div dir="ltr">
+
+```java
+ParseRole administrators = /* Your "Administrators" role */;
+ParseRole moderators = /* Your "Moderators" role */;
+moderators.getRoles().add(administrators);
+moderators.saveInBackground();
+```
+</div>
 
 ## File در Parse
 ParseFile به کاربر اجازه میدهد که در سرور فایل ذخیره یا از آن فایل دریافت کند.
