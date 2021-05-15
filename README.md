@@ -615,6 +615,122 @@ comment.remove(post);
 
 ## کوئری در Parse 
 
+مشابه کوئری های متداول از دیتابیس، میتوانیم Constraint های متفاوتی بر روی دیتا قرار دهیم.
+در پارس نیز میتوانیم انواع این شروط را بر روی کوئری برای رسیدن به نتیجه دلخواه قرار دهیم.
+مشابه آنچه پیشتر در بخش ابجکت نشان دادیم، کوئری از به صورت Async دریافت میشود.
+برای اینکه کوئری های دلخواهی را انجام دهیم، از تابع `findInBackground` استفاده میکنیم.
+الگوی کلی کوئری ها در پارس به شکل زیر است.
+
+<div dir="ltr">
+
+```java
+// Declaration of Object
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+// Constraints
+query.whereEqualTo("playerName", "Dan Stemkoski");
+// Run Query
+query.findInBackground(new FindCallback<ParseObject>() {
+    public void done(List<ParseObject> scoreList, ParseException e) {
+        if (e == null) {
+            Log.d("score", "Retrieved " + scoreList.size() + " scores");
+        } else {
+            Log.d("score", "Error: " + e.getMessage());
+        }
+    }
+});
+```
+</div>
+
+توجه کنید که نام ابجکت مانند نام جدول در دیتابیس است.
+برای ابجکت های برگشتی، شرایط متفاوتی میتوانیم بزاریم.
+مانند آنکه ستونی برابر مقداری دلخواه باشد یا نباشد و موارد متعدد دیگر.
+اکنون به تفکیک، برخی از موارد را نشان میدهیم.
+
+میتوانیم برای اینکه ستونی برابر ستونی دیگر باشد یا نباشد، از تابع زیر استفاده کنیم.
+
+<div dir="ltr">
+
+```java
+query.whereEqualTo("playerName", "Michael Yabuti");
+query.whereNotEqualTo("playerName", "Michael Yabuti");
+
+```
+</div>
+
+میتوانیم تعداد ایتم های برگشتی را محدود کنیم.
+
+<div dir="ltr">
+
+```java
+query.setLimit(10); // limit to at most 10 results
+```
+</div>
+
+همچنین میتوانیم مشخص کنیم که از لیست به دست آمده، تعدادی دلخواه از اول لیست نادیده گرفته شوند.
+
+<div dir="ltr">
+
+```java
+query.setSkip(10); // skip the first 10 results
+```
+</div>
+
+برای مواردی که قابل مرتب سازی و قابل مقایسه هستند، میتوانیم از چنین توابعی برای محدود کردن یا مرتب کردن کوئری نیز استفاده کنیم.
+از تابع زیر میتوانیم برای مرتب کردن کوئری به ترتیب صعودی یا نزولی استفاده کنیم.
+
+<div dir="ltr">
+
+```java
+query.orderByAscending("score");
+query.orderByDescending("score");
+```
+</div>
+
+همچنین می توانیم مشخص کنیم که درصورت برابر بودن مقدار مشخص شده برای مرتب‌سازی، پارس به سراغ الویت دوم یا n ام برود.
+
+<div dir="ltr">
+
+```java
+query.addAscendingOrder("score");
+
+query.addDescendingOrder("score");
+```
+</div>
+
+همچنین میتوانیم به شکل زیر از عملیات های مقایسه ای استفاده کنیم.
+
+<div dir="ltr">
+
+```java
+query.whereLessThan("wins", 50);
+
+query.whereLessThanOrEqualTo("wins", 50);
+
+query.whereGreaterThan("wins", 50);
+
+query.whereGreaterThanOrEqualTo("wins", 50);
+```
+</div>
+
+تصور کنید که میخواهیم از کوئری های مربوط به سه نام متفاوت، اجتماع بگیریم. در این حالت میتوانیم با استفاده از تابع زیر مشخص کنیم که نام ابجکت برگشتی، حتما باید عضو لیست زیر باشد.
+
+<div dir="ltr">
+
+```java
+String[] names = {"Jonathan Walsh", "Dario Wunsch", "Shawn Simon"};
+query.whereContainedIn("playerName", Arrays.asList(names));
+```
+</div>
+
+<div dir="ltr">
+
+```java
+String[] names = {"Jonathan Walsh", "Dario Wunsch", "Shawn Simon"};
+query.whereNotContainedIn("playerName", Arrays.asList(names));
+```
+</div>
+
+
 ### استفاده از Datastore محلی
 
 اگر شما Datastore محلی را با صدا زدن تابع `()Parse.enableLocalDatastore` قبل از صدا زدن تابع `()Parse.initialize` فعال کرده باشید، سپس شما می‌توانید از کوئری روی آبجکت‌های ذخیره‌شده روی دستگاهتان استفاده کنید. برای انجام این کار، تابع `fromLocalDatastore` را روی کوئری صدا بزنید.
