@@ -615,6 +615,58 @@ comment.remove(post);
 
 ## کوئری در Parse 
 
+### استفاده از Datastore محلی
+
+اگر شما Datastore محلی را با صدا زدن تابع `()Parse.enableLocalDatastore` قبل از صدا زدن تابع `()Parse.initialize` فعال کرده باشید، سپس شما می‌توانید از کوئری روی آبجکت‌های ذخیره‌شده روی دستگاهتان استفاده کنید. برای انجام این کار، تابع `fromLocalDatastore` را روی کوئری صدا بزنید.
+
+<div dir="ltr">
+
+```java
+query.fromLocalDatastore();
+query.findInBackground(new FindCallback<ParseObject>() {
+  public void done(final List<ParseObject> scoreList, ParseException e) {
+    if (e == null) {
+      // Results were successfully found from the local datastore.
+    } else {
+      // There was an error.
+    }
+  }
+});
+```
+</div>
+
+استفاده از کوئری در Datastore محلی، همانند استفاده از آن روی شبکه است و نتایج شامل تمامی اشیای مورد نظر کوئری می‌باشد. در این حالت کوئری حتی تغییرات ذخیره‌نشده روی شی را در نظر می‌گیرد.
+
+### ذخیره‌کردن کوئری
+
+### شمردن اشیا
+
+اگر لازم دارید که بدانید چه تعدادی از اشیا با کوئری هم‌خوانی دارند و به خود اشیا نیازی ندارید، شما می‌توانید که از تابع `count` به جای تابع `find` استفاده کنید.
+
+
+<div dir="ltr">
+
+```java
+ParseQuery<ParseObject> query = ParseQuery.getQuery("GameScore");
+query.whereEqualTo("playerName", "Sean Plott");
+query.countInBackground(new CountCallback() {
+  public void done(int count, ParseException e) {
+    if (e == null) {
+      // The count request succeeded. Log the count
+      Log.d("score", "Sean has played " + count + " games");
+    } else {
+      // The request failed
+    }
+  }
+});
+```
+</div>
+
+اگر می‌خواهید که ترد صدازننده را بلاک کنید، می‌توانید از تابع سنکرون `()query.count` استفاده کنید.
+
+### کوئری‌های ترکیبی
+
+
 
 ## کاربر در Parse 
 در هسته بسیاری از برنامه ها، ایدهٔ حساب های کاربری وجود دارد که به کاربران اجازه میدهند به شیوه ای ایمن به اطلاعاتشان دسترسی داشته باشند.
