@@ -666,7 +666,31 @@ query.countInBackground(new CountCallback() {
 
 ### کوئری‌های ترکیبی
 
+اگر می‌خواهید آبجکت‌هایی را بیابید که با حداقل یکی از چند کوئری مد نظر شما هم‌خوانی داشته باشند، کافیست که از تابع `ParseQuery.or` برای ساختن آن کوئری استفاده کنید.
 
+<div dir="ltr">
+
+```java
+ParseQuery<ParseObject> lotsOfWins = ParseQuery.getQuery("Player");
+lotsOfWins.whereGreaterThan(150);
+
+ParseQuery<ParseObject> fewWins = ParseQuery.getQuery("Player");
+fewWins.whereLessThan(5);
+
+List<ParseQuery<ParseObject>> queries = new ArrayList<ParseQuery<ParseObject>>();
+queries.add(lotsOfWins);
+queries.add(fewWins);
+
+ParseQuery<ParseObject> mainQuery = ParseQuery.or(queries);
+mainQuery.findInBackground(new FindCallback<ParseObject>() {
+  public void done(List<ParseObject> results, ParseException e) {
+    // results has the list of players that win a lot or haven't won much.
+  }
+});
+```
+</div>
+
+شما می‌تواند از عملگرهای دیگری همانند `and` به جای `or` برای ساختن کوئری جدید استفاده کنید.
 
 ## کاربر در Parse 
 در هسته بسیاری از برنامه ها، ایدهٔ حساب های کاربری وجود دارد که به کاربران اجازه میدهند به شیوه ای ایمن به اطلاعاتشان دسترسی داشته باشند.
