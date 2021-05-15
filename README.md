@@ -639,6 +639,95 @@ query.findInBackground(new FindCallback<ParseObject>() {
 
 ### ذخیره‌کردن کوئری
 
+#### با استفاده از Datastore محلی
+
+اکثرا مفید است که نتیجه کوئری را روی دستگاه ذخیره کنید. چون به شما اجازه می‌دهد که زمانی که کاربر آفلاین است، اطلاعات را به نمایش بگذارید یا زمانی که پاسخ درخواست‌های شبکه هنوز برنگشته است. آسان‌ترین راه برای انجام این کار استفاده از Datastore محلی است. شما می‌توانید با برچسب اشیا را پین کنید که این کار به شما اجازه می‌دهد که یک دسته از اشیا را هم‌زمان با هم مدیریت کنید. برای این کار می‌توانید یک برچسب را به تابع `pinAllInBackground` بدهید.
+
+<div dir="ltr">
+
+```java
+final String TOP_SCORES_LABEL = "topScores";
+
+// Query for the latest objects from Parse.
+query.findInBackground(new FindCallback<ParseObject>() {
+  public void done(final List<ParseObject> scoreList, ParseException e) {
+    if (e != null) {
+      // There was an error or the network wasn't available.
+      return;
+    }
+
+    // Release any objects previously pinned for this query.
+    ParseObject.unpinAllInBackground(TOP_SCORES_LABEL, scoreList, new DeleteCallback() {
+      public void done(ParseException e) {
+        if (e != null) {
+          // There was some error.
+          return;
+        }
+
+        // Add the latest results for this query to the cache.
+        ParseObject.pinAllInBackground(TOP_SCORES_LABEL, scoreList);
+      }
+    });
+  }
+});
+```
+</div>
+
+اکنون با دادن کوئری به دستور `fromLocalDatastore`، این اشیا در صورت هم‌خوانی با کوئری در نتایج این تابع ظاهر خواهند شد. `ParseQuery` به شما اجازه می‌دهد که از شبکه و از Datastore محلی به صورت زنجیری یا موازی کوئری بگیرید.
+
+<div dir="ltr">
+
+```java
+final ParseQuery query = ParseQuery.getQuery("GameScore");
+query.fromLocalDatastore().findInBackground().continueWithTask((task) -> {
+  // Update UI with results from Local Datastore ...
+  ParseException error = task.getError();
+  if(error == null){
+    List<ParseObject> gameScore = task.getResult();
+    for(ParseObject game : gameScore){
+        //...
+    }
+  }
+  // Now query the network:
+  return query.fromNetwork().findInBackground();
+}, Task.UI_EXECUTOR).continueWithTask((task) -> {
+  // Update UI with results from Network ...
+  ParseException error = task.getError();
+  if(error == null){
+    List<ParseObject> gameScore = task.getResult();
+    for(ParseObject game : gameScore){
+        //...
+    }
+  }
+  return task;
+}, Task.UI_EXECUTOR);
+```
+</div>
+
+#### بدون استفاده از Datastore محلی
+
+به طور پیش‌فرض، کوئری از cache استفاده نمی‌کند اما شما می‌توانید آن رفتار را با تابع `setCachePolicy` تغییر دهید. برای مثال زمانی که شبکه در دسترس نیست و می‌خواهید از اطلاعات ذخیره‌شده پیش از کوئری استفاده کنید.
+
+<div dir="ltr">
+
+```java
+query.setCachePolicy(ParseQuery.CachePolicy.NETWORK_ELSE_CACHE);
+query.findInBackground(new FindCallback<ParseObject>() {
+  public void done(List<ParseObject> scoreList, ParseException e) {
+    if (e == null) {
+      // Results were successfully found, looking first on the
+      // network and then on disk.
+    } else {
+      // The network was inaccessible and we have no cached data
+      // for this query.
+    }
+  }
+});
+```
+</div>
+
+ParseQuery توابعی را در اختیار شما قرار داده است که با کمک آن می‌توانید رفتار با cache را مدیریت کنید.
+
 ### شمردن اشیا
 
 اگر لازم دارید که بدانید چه تعدادی از اشیا با کوئری هم‌خوانی دارند و به خود اشیا نیازی ندارید، شما می‌توانید که از تابع `count` به جای تابع `find` استفاده کنید.
